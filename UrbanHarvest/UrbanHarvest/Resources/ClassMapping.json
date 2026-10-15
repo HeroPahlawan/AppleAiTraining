@@ -1,0 +1,57 @@
+{
+  "_comment": "Edit this file to match YOUR Create ML models. Keys that start with '_' are ignored. No code changes needed.",
+
+  "models": {
+    "_comment": "File names WITHOUT extension. Drop <name>.mlmodel into UrbanHarvest/Models/ and re-run `xcodegen generate`.",
+    "detector": "FruitDetector",
+    "advisor": "YieldAdvisor"
+  },
+
+  "detection": {
+    "_comment": "Detections below this confidence (0..1) are ignored. imageCropAndScale: scaleFill | scaleFit | centerCrop.",
+    "minimumConfidence": 0.5,
+    "imageCropAndScale": "scaleFill"
+  },
+
+  "advisor": {
+    "_comment": "Which column your tabular regressor predicts: defect_rate | yield_kg_per_m2 | auto (read from the model's output name).",
+    "target": "auto"
+  },
+
+  "labels": {
+    "_comment": "Exact labels from your detector (case-insensitive). Every label you trained must appear in one of the two buckets.",
+    "good": [
+      "fresh", "good", "ripe", "segar", "baik",
+      "fresh_apple", "fresh_banana", "fresh_orange", "fresh_mango", "fresh_tomato", "fresh_strawberry",
+      "freshapples", "freshbanana", "freshoranges"
+    ],
+    "defect": [
+      "rotten", "defect", "defective", "bruised", "damaged", "busuk", "cacat",
+      "rotten_apple", "rotten_banana", "rotten_orange", "rotten_mango", "rotten_tomato", "rotten_strawberry",
+      "rottenapples", "rottenbanana", "rottenoranges"
+    ]
+  },
+
+  "keywords": {
+    "_comment": "Fallback when a label is not listed above: the label is split on _ - and spaces; if any word matches, it goes to that bucket. Defect is checked first.",
+    "good": ["fresh", "good", "ripe", "healthy", "segar", "baik", "matang"],
+    "defect": ["rotten", "rot", "defect", "defective", "bruised", "bruise", "damaged", "mold", "moldy", "busuk", "cacat", "rusak"]
+  },
+
+  "unknownLabel": {
+    "_comment": "What to do with a label matched by nothing above: ignore | good | defect.",
+    "policy": "ignore"
+  },
+
+  "displayNames": {
+    "_comment": "Optional: text shown on the bounding box instead of the raw label.",
+    "fresh": "Segar",
+    "rotten": "Busuk",
+    "fresh_apple": "Apel segar",
+    "rotten_apple": "Apel busuk",
+    "fresh_banana": "Pisang segar",
+    "rotten_banana": "Pisang busuk",
+    "fresh_orange": "Jeruk segar",
+    "rotten_orange": "Jeruk busuk"
+  }
+}
