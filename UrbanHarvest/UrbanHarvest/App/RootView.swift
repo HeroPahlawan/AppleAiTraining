@@ -38,3 +38,8 @@ struct RootView: View {
         speech.rate = Float(settings.speechRate)
     }
 }
+
+#Preview {
+    RootView()
+        .previewEnvironment()
+}

@@ -102,3 +102,16 @@ struct DetectionOverlay: View {
         .allowsHitTesting(false)
     }
 }
+
+#Preview {
+    DetectionOverlay(
+        boxes: [
+            OverlayBox(id: "1", rect: CGRect(x: 0.15, y: 0.2, width: 0.25, height: 0.2), bucket: .good, title: "#1 Tomat", confidence: 0.92, counted: true),
+            OverlayBox(id: "2", rect: CGRect(x: 0.55, y: 0.5, width: 0.22, height: 0.18), bucket: .defect, title: "#2 Tomat busuk", confidence: 0.78)
+        ],
+        imageSize: CGSize(width: 720, height: 1280),
+        mode: .fit,
+        linePosition: 0.5
+    )
+    .background(Color.black)
+}

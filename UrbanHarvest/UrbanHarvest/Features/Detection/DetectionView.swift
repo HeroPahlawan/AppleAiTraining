@@ -253,3 +253,14 @@ struct CountersBar: View {
         }
     }
 }
+
+#Preview("Detection") {
+    DetectionView(detector: MockFruitDetector(), config: .default)
+        .previewEnvironment()
+}
+
+#Preview("Counters bar") {
+    CountersBar(counts: FruitCounts(good: 128, defect: 14), language: .indonesian)
+        .padding()
+        .previewEnvironment()
+}

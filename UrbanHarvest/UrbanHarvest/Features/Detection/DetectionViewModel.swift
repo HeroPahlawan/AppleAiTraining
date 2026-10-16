@@ -220,8 +220,10 @@ final class DetectionViewModel: ObservableObject {
     /// Feeds a blank portrait frame ~15 times a second to the demo detector,
     /// so live counting can be tried in the simulator.
     private func startSimulatedFeed() {
-        guard simulatedTimer == nil, let buffer = Self.makeBlankPixelBuffer(width: 72, height: 128) else { return }
+        guard simulatedTimer == nil, let blankBuffer = Self.makeBlankPixelBuffer(width: 72, height: 128) else { return }
         let pipeline = self.pipeline
+        // The blank buffer is created once and only ever read on the timer queue.
+        nonisolated(unsafe) let buffer = blankBuffer
         let timer = DispatchSource.makeTimerSource(queue: DispatchQueue(label: "UrbanHarvest.simulatedFeed"))
         timer.schedule(deadline: .now(), repeating: .milliseconds(66))
         timer.setEventHandler { @Sendable [weak self] in

@@ -139,3 +139,13 @@ private struct SessionRow: View {
         .padding(.vertical, 2)
     }
 }
+
+#Preview("With sessions") {
+    DashboardView()
+        .previewEnvironment()
+}
+
+#Preview("Empty") {
+    DashboardView()
+        .previewEnvironment(seeded: false)
+}

@@ -164,3 +164,8 @@ private struct ModelStatusRow: View {
         }
     }
 }
+
+#Preview {
+    SettingsView()
+        .previewEnvironment()
+}

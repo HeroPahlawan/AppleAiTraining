@@ -240,3 +240,8 @@ private struct AdvisoryCard: View {
         .padding(.vertical, 4)
     }
 }
+
+#Preview {
+    AdvisorView()
+        .previewEnvironment()
+}

@@ -77,3 +77,8 @@ struct SaveSessionSheet: View {
         dismiss()
     }
 }
+
+#Preview {
+    SaveSessionSheet(counts: FruitCounts(good: 128, defect: 14))
+        .previewEnvironment()
+}

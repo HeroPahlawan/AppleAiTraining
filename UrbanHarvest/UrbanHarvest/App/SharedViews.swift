@@ -82,3 +82,18 @@ struct StatTile: View {
         .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 10))
     }
 }
+
+#Preview("Shared components") {
+    VStack(spacing: 16) {
+        DemoBadge()
+        EstimateTag()
+        ListenButton(id: "preview", text: "Contoh teks untuk didengarkan")
+        HStack(spacing: 8) {
+            StatTile(title: "Baik", value: "128", color: .green)
+            StatTile(title: "Cacat", value: "14", color: .red)
+            StatTile(title: "Total", value: "142")
+        }
+    }
+    .padding()
+    .previewEnvironment()
+}
