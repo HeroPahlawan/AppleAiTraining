@@ -9,7 +9,7 @@ struct UrbanHarvestApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootView()
+            FruitGradeRootView()
                 .environmentObject(models)
                 .environmentObject(settings)
                 .environmentObject(speech)

@@ -3,13 +3,13 @@
 
   "models": {
     "_comment": "File names WITHOUT extension. Drop <name>.mlmodel into UrbanHarvest/Models/ and re-run `xcodegen generate`.",
-    "detector": "FruitDetector",
+    "detector": "FruitsQualityDetector TL 1500",
     "advisor": "YieldAdvisor"
   },
 
   "detection": {
     "_comment": "Detections below this confidence (0..1) are ignored. imageCropAndScale: scaleFill | scaleFit | centerCrop.",
-    "minimumConfidence": 0.5,
+    "minimumConfidence": 0.4,
     "imageCropAndScale": "scaleFill"
   },
 
@@ -23,19 +23,21 @@
     "good": [
       "fresh", "good", "ripe", "segar", "baik",
       "fresh_apple", "fresh_banana", "fresh_orange", "fresh_mango", "fresh_tomato", "fresh_strawberry",
-      "freshapples", "freshbanana", "freshoranges"
+      "freshapples", "freshbanana", "freshoranges",
+      "apple_good", "banana_good", "guava_good", "lime_good", "orange_good", "pomegranate_good"
     ],
     "defect": [
       "rotten", "defect", "defective", "bruised", "damaged", "busuk", "cacat",
       "rotten_apple", "rotten_banana", "rotten_orange", "rotten_mango", "rotten_tomato", "rotten_strawberry",
-      "rottenapples", "rottenbanana", "rottenoranges"
+      "rottenapples", "rottenbanana", "rottenoranges",
+      "apple_bad", "banana_bad", "guava_bad", "lime_bad", "orange_bad", "pomegranate_bad"
     ]
   },
 
   "keywords": {
     "_comment": "Fallback when a label is not listed above: the label is split on _ - and spaces; if any word matches, it goes to that bucket. Defect is checked first.",
     "good": ["fresh", "good", "ripe", "healthy", "segar", "baik", "matang"],
-    "defect": ["rotten", "rot", "defect", "defective", "bruised", "bruise", "damaged", "mold", "moldy", "busuk", "cacat", "rusak"]
+    "defect": ["rotten", "rot", "defect", "defective", "bruised", "bruise", "damaged", "mold", "moldy", "busuk", "cacat", "rusak", "bad"]
   },
 
   "unknownLabel": {
@@ -52,6 +54,18 @@
     "fresh_banana": "Pisang segar",
     "rotten_banana": "Pisang busuk",
     "fresh_orange": "Jeruk segar",
-    "rotten_orange": "Jeruk busuk"
+    "rotten_orange": "Jeruk busuk",
+    "apple_good": "Apple",
+    "apple_bad": "Apple",
+    "banana_good": "Banana",
+    "banana_bad": "Banana",
+    "guava_good": "Guava",
+    "guava_bad": "Guava",
+    "lime_good": "Lime",
+    "lime_bad": "Lime",
+    "orange_good": "Orange",
+    "orange_bad": "Orange",
+    "pomegranate_good": "Pomegranate",
+    "pomegranate_bad": "Pomegranate"
   }
 }
