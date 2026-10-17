@@ -133,8 +133,18 @@ enum SpokenText {
 
     // MARK: Summaries
 
-    static func analysisSpoken(_ result: WhatIfResult, advisories: [Advisory], language: SpeechLanguage) -> String {
+    static func analysisSpoken(
+        _ result: WhatIfResult,
+        advisories: [Advisory],
+        summary: String? = nil,
+        language: SpeechLanguage
+    ) -> String {
         var sentences: [String] = []
+
+        if let summary, !summary.isEmpty {
+            sentences.append(summary)
+        }
+
         let predicted = value(result.baseline, target: result.target, language: language)
 
         switch (language, result.target) {

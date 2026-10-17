@@ -12,14 +12,25 @@ struct AdvisorView: View {
 
                 Section {
                     Button {
-                        model.analyze(using: models.predictor)
+                        Task {
+                            await model.analyze(using: models.predictor)
+                        }
                     } label: {
-                        Label("Analisis", systemImage: "wand.and.stars")
+                        if model.isAnalyzing {
+                            HStack(spacing: 8) {
+                                ProgressView()
+                                    .tint(.white)
+                                Text("Menganalisis dengan Apple Intelligence...")
+                            }
                             .frame(maxWidth: .infinity)
+                        } else {
+                            Label("Analisis", systemImage: "wand.and.stars")
+                                .frame(maxWidth: .infinity)
+                        }
                     }
                     .buttonStyle(.borderedProminent)
                     .controlSize(.large)
-                    .disabled(model.validationError != nil)
+                    .disabled(model.validationError != nil || model.isAnalyzing)
                     .listRowBackground(Color.clear)
                     .listRowInsets(EdgeInsets())
                 }
@@ -40,9 +51,19 @@ struct AdvisorView: View {
             .toolbar {
                 if models.isPredictorDemo {
                     ToolbarItem(placement: .topBarTrailing) { DemoBadge() }
+                } else {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Label("Apple Intelligence", systemImage: "sparkles")
+                            .font(.caption.weight(.semibold))
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(Color.accentColor.opacity(0.15), in: Capsule())
+                            .foregroundStyle(Color.accentColor)
+                    }
                 }
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Reset") { model.resetInput() }
+                        .disabled(model.isAnalyzing)
                 }
             }
         }
@@ -96,6 +117,19 @@ struct AdvisorView: View {
     private func resultSections(_ result: WhatIfResult) -> some View {
         Section {
             VStack(alignment: .leading, spacing: 8) {
+                if let summary = model.aiSummary {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Label("Analisis Apple Intelligence", systemImage: "sparkles")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(Color.accentColor)
+                        Text(summary)
+                            .font(.subheadline)
+                            .foregroundStyle(.primary)
+                    }
+                    .padding(.bottom, 4)
+                    Divider()
+                }
+
                 HStack {
                     Text("Perkiraan \(result.target.displayName.lowercased())")
                         .font(.subheadline)
@@ -108,7 +142,12 @@ struct AdvisorView: View {
                     .foregroundStyle(result.target == .defectRate ? Color.defect : Color.good)
                 ListenButton(
                     id: "analysis-summary",
-                    text: SpokenText.analysisSpoken(result, advisories: model.advisories, language: settings.speechLanguage)
+                    text: SpokenText.analysisSpoken(
+                        result,
+                        advisories: model.advisories,
+                        summary: settings.speechLanguage == .english ? model.aiEnglishSummary : model.aiSummary,
+                        language: settings.speechLanguage
+                    )
                 )
             }
             .padding(.vertical, 4)
@@ -145,7 +184,9 @@ struct AdvisorView: View {
         } header: {
             Text("Peringatan dan tips")
         } footer: {
-            Text("Berdasarkan aturan sederhana, tetap berlaku tanpa model.")
+            Text(model.isUsingFoundationModel
+                ? "Dihasilkan langsung oleh model kecerdasan buatan Apple Intelligence pada perangkat."
+                : "Berdasarkan aturan sederhana, tetap berlaku tanpa model.")
         }
     }
 }

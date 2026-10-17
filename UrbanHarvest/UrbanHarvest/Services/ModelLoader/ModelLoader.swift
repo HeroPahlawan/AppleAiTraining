@@ -25,6 +25,7 @@ struct ModelStatus: Equatable {
 }
 
 /// Picks the real Core ML implementation when the model is in the bundle,
+/// or Apple Intelligence Foundation Models when available,
 /// otherwise the demo-mode mock. Created once at app start.
 final class ModelProvider: ObservableObject {
     let mapping: ClassMapping
@@ -86,8 +87,17 @@ final class ModelProvider: ObservableObject {
             predictor = MockYieldPredictor(target: mapping.advisorTarget ?? .defectRate)
             predictorStatus = ModelStatus(modelName: mapping.advisorModelName, isLoaded: false, detail: "Gagal dimuat: \(error.localizedDescription)")
         case nil:
-            predictor = MockYieldPredictor(target: mapping.advisorTarget ?? .defectRate)
-            predictorStatus = ModelStatus(modelName: mapping.advisorModelName, isLoaded: false, detail: "File tidak ditemukan, memakai aturan demo")
+            if FoundationModelAdvisor.shared.isAvailable {
+                predictor = FoundationYieldPredictor(target: mapping.advisorTarget ?? .defectRate)
+                predictorStatus = ModelStatus(
+                    modelName: "Apple Intelligence (Foundation Models)",
+                    isLoaded: true,
+                    detail: "Model on-device aktif"
+                )
+            } else {
+                predictor = MockYieldPredictor(target: mapping.advisorTarget ?? .defectRate)
+                predictorStatus = ModelStatus(modelName: mapping.advisorModelName, isLoaded: false, detail: "File tidak ditemukan, memakai aturan demo")
+            }
         }
 
         return ModelProvider(
