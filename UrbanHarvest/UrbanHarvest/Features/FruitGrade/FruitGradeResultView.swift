@@ -7,40 +7,65 @@ struct FruitGradeResultView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            topBar
+            // Takes whatever height the card leaves, so it adapts to every iPhone size.
             photo
-                .frame(height: 360)
-                .overlay(alignment: .top) { topBar }
-
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
             resultCard
-            Spacer(minLength: 0)
+                .background {
+                    UnevenRoundedRectangle(topLeadingRadius: 28, topTrailingRadius: 28)
+                        .fill(Color(.systemBackground))
+                        .shadow(color: .black.opacity(0.08), radius: 12, y: -4)
+                        .ignoresSafeArea(edges: .bottom)
+                }
         }
-        .ignoresSafeArea(edges: .top)
+        // Opaque, so the presenting screen never shows through the full-screen cover.
+        .background(Color(.secondarySystemBackground).ignoresSafeArea())
     }
 
+    @ViewBuilder
     private var photo: some View {
-        FruitGradePhotoBackground(image: detection.image, emoji: detection.fruit.emoji, dark: true, contentMode: .fit)
-            .overlay {
-                if let image = detection.image, let box = detection.boundingBox {
-                    FruitGradeBoxOverlay(
-                        rect: box,
-                        imageSize: image.size,
-                        mode: .fit,
-                        title: detection.fruit.displayName,
-                        subtitle: detection.ripeness.rawValue,
-                        color: detection.ripeness.color
-                    )
+        if let image = detection.image {
+            Color.clear
+                .overlay {
+                    Image(uiImage: image)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
                 }
-            }
+                .overlay {
+                    if let box = detection.boundingBox {
+                        FruitGradeBoxOverlay(
+                            rect: box,
+                            imageSize: image.size,
+                            mode: .fit,
+                            title: detection.fruit.displayName,
+                            subtitle: detection.ripeness.rawValue,
+                            color: detection.ripeness.color
+                        )
+                    }
+                }
+        } else {
+            FruitGradePhotoBackground(emoji: detection.fruit.emoji, dark: true)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+        }
     }
 
     private var topBar: some View {
         HStack {
             Button(action: onRetake) {
                 Image(systemName: "chevron.left")
-                    .foregroundStyle(.white)
-                    .padding(10)
-                    .background(.black.opacity(0.35), in: Circle())
+                    .font(.headline)
+                    .foregroundStyle(.primary)
+                    .frame(width: 40, height: 40)
+                    .background(.regularMaterial, in: Circle())
             }
+            .accessibilityLabel("Back")
+            Spacer()
+            Text("Detection Result")
+                .font(.headline)
             Spacer()
             if let image = detection.image {
                 ShareLink(
@@ -48,14 +73,18 @@ struct FruitGradeResultView: View {
                     preview: SharePreview(detection.fruit.displayName, image: Image(uiImage: image))
                 ) {
                     Image(systemName: "square.and.arrow.up")
-                        .foregroundStyle(.white)
-                        .padding(10)
-                        .background(.black.opacity(0.35), in: Circle())
+                        .font(.headline)
+                        .foregroundStyle(.primary)
+                        .frame(width: 40, height: 40)
+                        .background(.regularMaterial, in: Circle())
                 }
+                .accessibilityLabel("Share")
+            } else {
+                Color.clear.frame(width: 40, height: 40)
             }
         }
         .padding(.horizontal, 16)
-        .padding(.top, 60)
+        .padding(.top, 8)
     }
 
     private var resultCard: some View {
@@ -107,7 +136,9 @@ struct FruitGradeResultView: View {
                     .font(.subheadline.weight(.medium))
             }
         }
-        .padding(20)
+        .padding(.horizontal, 20)
+        .padding(.top, 24)
+        .padding(.bottom, 8)
     }
 
     private func resultStat(title: String, value: String, dot: Color? = nil) -> some View {
@@ -125,6 +156,24 @@ struct FruitGradeResultView: View {
     }
 }
 
-#Preview {
+#Preview("With photo") {
+    FruitGradeResultView(
+        detection: FruitGradeDetection(
+            fruit: .apple,
+            ripeness: .ripe,
+            confidence: 0.98,
+            mode: .snapshot,
+            image: SampleImage.drawn(),
+            // Box spanning almost the whole photo, like the real apple test.
+            boundingBox: CGRect(x: 0.08, y: 0.02, width: 0.84, height: 0.9),
+            detectedCount: 2,
+            modelName: "FruitsQualityDetector TL 1500"
+        ),
+        onRetake: {},
+        onSave: {}
+    )
+}
+
+#Preview("No photo") {
     FruitGradeResultView(detection: .preview, onRetake: {}, onSave: {})
 }

@@ -35,6 +35,8 @@ struct FruitGradeBoundingBox: View {
     var subtitle: String?
     var color: Color = .green
     var size = CGSize(width: 180, height: 170)
+    /// Draw the label inside the box's top-left corner instead of above it.
+    var labelInside = false
 
     var body: some View {
         ZStack(alignment: .topLeading) {
@@ -55,7 +57,8 @@ struct FruitGradeBoundingBox: View {
             .background(color, in: RoundedRectangle(cornerRadius: 6))
             .foregroundStyle(.white)
             .fixedSize()
-            .alignmentGuide(.top) { $0[.bottom] - 4 }
+            .padding(labelInside ? 6 : 0)
+            .alignmentGuide(.top) { labelInside ? $0[.top] : $0[.bottom] - 4 }
         }
     }
 }
@@ -73,8 +76,15 @@ struct FruitGradeBoxOverlay: View {
     var body: some View {
         GeometryReader { geometry in
             let mapped = NormalizedRectMapper(imageSize: imageSize, viewSize: geometry.size, mode: mode).rect(for: rect)
-            FruitGradeBoundingBox(title: title, subtitle: subtitle, color: color, size: mapped.size)
-                .offset(x: mapped.minX, y: mapped.minY)
+            FruitGradeBoundingBox(
+                title: title,
+                subtitle: subtitle,
+                color: color,
+                size: mapped.size,
+                // No room above the box (it starts near the top of the view): keep the label inside.
+                labelInside: mapped.minY < 48
+            )
+            .offset(x: mapped.minX, y: mapped.minY)
         }
         .allowsHitTesting(false)
     }
@@ -98,6 +108,9 @@ struct FruitGradeProgressRing: View {
             Text(label)
                 .font(.headline.weight(.bold).monospacedDigit())
                 .foregroundStyle(color)
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+                .padding(lineWidth + 2)
         }
     }
 }
