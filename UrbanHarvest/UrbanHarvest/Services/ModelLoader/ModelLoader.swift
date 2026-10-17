@@ -70,8 +70,18 @@ final class ModelProvider: ObservableObject {
             detector = MockFruitDetector()
             detectorStatus = ModelStatus(modelName: mapping.detectorModelName, isLoaded: false, detail: "Gagal dimuat: \(error.localizedDescription)")
         case nil:
-            detector = MockFruitDetector()
-            detectorStatus = ModelStatus(modelName: mapping.detectorModelName, isLoaded: false, detail: "File tidak ditemukan, memakai detektor demo")
+            if let mlModel = try? FruitsQualityDetector_TL_1500(configuration: MLModelConfiguration()).model,
+               let realDetector = try? CoreMLFruitDetector(model: mlModel, mapping: mapping) {
+                detector = realDetector
+                detectorStatus = ModelStatus(modelName: "FruitsQualityDetector TL 1500", isLoaded: true, detail: "Model Core ML aktif")
+            } else if let mlModel = try? RipenessDetection1_TL_500(configuration: MLModelConfiguration()).model,
+               let realDetector = try? CoreMLFruitDetector(model: mlModel, mapping: mapping) {
+                detector = realDetector
+                detectorStatus = ModelStatus(modelName: "RipenessDetection1 TL 500", isLoaded: true, detail: "Model Core ML aktif")
+            } else {
+                detector = MockFruitDetector()
+                detectorStatus = ModelStatus(modelName: mapping.detectorModelName, isLoaded: false, detail: "File tidak ditemukan, memakai detektor demo")
+            }
         }
 
         // Advisor

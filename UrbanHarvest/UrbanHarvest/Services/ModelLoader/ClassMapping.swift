@@ -48,15 +48,21 @@ struct ClassMapping: Equatable {
 
     /// Used when the JSON file is missing or unreadable.
     static let fallback = ClassMapping(
-        detectorModelName: "FruitDetector",
+        detectorModelName: "FruitsQualityDetector TL 1500",
         advisorModelName: "YieldAdvisor",
         minimumConfidence: 0.5,
         cropAndScale: .scaleFill,
         advisorTarget: nil,
-        goodLabels: ["fresh", "good"],
-        defectLabels: ["rotten", "defect"],
-        goodKeywords: ["fresh", "good", "ripe", "segar"],
-        defectKeywords: ["rotten", "defect", "bruised", "damaged", "busuk"],
+        goodLabels: [
+            "fresh", "good", "ripe", "segar", "baik",
+            "apple_good", "banana_good", "guava_good", "lime_good", "orange_good", "pomegranate_good"
+        ],
+        defectLabels: [
+            "rotten", "defect", "bad", "busuk", "cacat", "rusak",
+            "apple_bad", "banana_bad", "guava_bad", "lime_bad", "orange_bad", "pomegranate_bad"
+        ],
+        goodKeywords: ["fresh", "good", "ripe", "segar", "baik", "matang"],
+        defectKeywords: ["rotten", "rot", "defect", "defective", "bruised", "damaged", "busuk", "cacat", "rusak", "overripe", "unripe", "bad"],
         unknownPolicy: .ignore,
         displayNames: [:]
     )

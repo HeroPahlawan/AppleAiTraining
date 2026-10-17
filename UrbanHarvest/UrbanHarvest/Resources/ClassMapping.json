@@ -3,7 +3,7 @@
 
   "models": {
     "_comment": "File names WITHOUT extension. Drop <name>.mlmodel into UrbanHarvest/Models/ and re-run `xcodegen generate`.",
-    "detector": "FruitDetector",
+    "detector": "FruitsQualityDetector TL 1500",
     "advisor": "YieldAdvisor"
   },
 
@@ -23,19 +23,30 @@
     "good": [
       "fresh", "good", "ripe", "segar", "baik",
       "fresh_apple", "fresh_banana", "fresh_orange", "fresh_mango", "fresh_tomato", "fresh_strawberry",
-      "freshapples", "freshbanana", "freshoranges"
+      "freshapples", "freshbanana", "freshoranges",
+      "apple ripe", "banana ripe", "grape ripe", "mango ripe", "melon ripe", "orange ripe", "peach ripe", "pear ripe",
+      "apple_good", "banana_good", "guava_good", "lime_good", "orange_good", "pomegranate_good"
     ],
     "defect": [
-      "rotten", "defect", "defective", "bruised", "damaged", "busuk", "cacat",
+      "rotten", "defect", "defective", "bruised", "damaged", "busuk", "cacat", "overripe", "unripe", "bad",
       "rotten_apple", "rotten_banana", "rotten_orange", "rotten_mango", "rotten_tomato", "rotten_strawberry",
-      "rottenapples", "rottenbanana", "rottenoranges"
+      "rottenapples", "rottenbanana", "rottenoranges",
+      "apple rotten", "apple overripe", "apple unripe",
+      "banana rotten", "banana overripe", "banana unripe",
+      "grape rotten", "grape overripe", "grape unripe",
+      "mango rotten", "mango overripe", "mango unripe",
+      "melon rotten", "melon overripe", "melon unripe",
+      "orange rotten", "orange overripe", "orange unripe",
+      "peach rotten", "peach overripe", "peach unripe",
+      "pear rotten", "pear overripe", "pear unripe",
+      "apple_bad", "banana_bad", "guava_bad", "lime_bad", "orange_bad", "pomegranate_bad"
     ]
   },
 
   "keywords": {
     "_comment": "Fallback when a label is not listed above: the label is split on _ - and spaces; if any word matches, it goes to that bucket. Defect is checked first.",
     "good": ["fresh", "good", "ripe", "healthy", "segar", "baik", "matang"],
-    "defect": ["rotten", "rot", "defect", "defective", "bruised", "bruise", "damaged", "mold", "moldy", "busuk", "cacat", "rusak"]
+    "defect": ["rotten", "rot", "defect", "defective", "bruised", "bruise", "damaged", "mold", "moldy", "busuk", "cacat", "rusak", "overripe", "unripe", "bad"]
   },
 
   "unknownLabel": {
@@ -47,11 +58,55 @@
     "_comment": "Optional: text shown on the bounding box instead of the raw label.",
     "fresh": "Segar",
     "rotten": "Busuk",
-    "fresh_apple": "Apel segar",
-    "rotten_apple": "Apel busuk",
-    "fresh_banana": "Pisang segar",
-    "rotten_banana": "Pisang busuk",
-    "fresh_orange": "Jeruk segar",
-    "rotten_orange": "Jeruk busuk"
+    "fresh_apple": "Apel Segar",
+    "rotten_apple": "Apel Busuk",
+    "fresh_banana": "Pisang Segar",
+    "rotten_banana": "Pisang Busuk",
+    "fresh_orange": "Jeruk Segar",
+    "rotten_orange": "Jeruk Busuk",
+    "apple_good": "Apel Baik",
+    "apple_bad": "Apel Cacat",
+    "banana_good": "Pisang Baik",
+    "banana_bad": "Pisang Cacat",
+    "guava_good": "Jambu Baik",
+    "guava_bad": "Jambu Cacat",
+    "lime_good": "Jeruk Nipis Baik",
+    "lime_bad": "Jeruk Nipis Cacat",
+    "orange_good": "Jeruk Baik",
+    "orange_bad": "Jeruk Cacat",
+    "pomegranate_good": "Delima Baik",
+    "pomegranate_bad": "Delima Cacat",
+    "apple ripe": "Apel Matang",
+    "apple rotten": "Apel Busuk",
+    "apple overripe": "Apel Terlalu Matang",
+    "apple unripe": "Apel Mentah",
+    "banana ripe": "Pisang Matang",
+    "banana rotten": "Pisang Busuk",
+    "banana overripe": "Pisang Terlalu Matang",
+    "banana unripe": "Pisang Mentah",
+    "grape ripe": "Anggur Matang",
+    "grape rotten": "Anggur Busuk",
+    "grape overripe": "Anggur Terlalu Matang",
+    "grape unripe": "Anggur Mentah",
+    "mango ripe": "Mangga Matang",
+    "mango rotten": "Mangga Busuk",
+    "mango overripe": "Mangga Terlalu Matang",
+    "mango unripe": "Mangga Mentah",
+    "melon ripe": "Melon Matang",
+    "melon rotten": "Melon Busuk",
+    "melon overripe": "Melon Terlalu Matang",
+    "melon unripe": "Melon Mentah",
+    "orange ripe": "Jeruk Matang",
+    "orange rotten": "Jeruk Busuk",
+    "orange overripe": "Jeruk Terlalu Matang",
+    "orange unripe": "Jeruk Mentah",
+    "peach ripe": "Persik Matang",
+    "peach rotten": "Persik Busuk",
+    "peach overripe": "Persik Terlalu Matang",
+    "peach unripe": "Persik Mentah",
+    "pear ripe": "Pir Matang",
+    "pear rotten": "Pir Busuk",
+    "pear overripe": "Pir Terlalu Matang",
+    "pear unripe": "Pir Mentah"
   }
 }

@@ -43,19 +43,15 @@ final class DetectionViewModel: ObservableObject {
     @Published private(set) var isAnalyzingPhoto = false
     @Published var errorMessage: String?
 
-    let camera = CameraManager()
+    let camera: CameraManager
     let mapping: ClassMapping
     private(set) var config: CountingConfig
-    private let detector: FruitDetecting
-    private let pipeline: DetectionPipeline
-    private var simulatedTimer: DispatchSourceTimer?
 
-    init(detector: FruitDetecting, config: CountingConfig, mapping: ClassMapping = .load()) {
-        self.detector = detector
+    init(detector: FruitDetecting? = nil, config: CountingConfig, mapping: ClassMapping = .load()) {
         self.config = config
         self.mapping = mapping
-        let pipeline = DetectionPipeline(detector: detector, config: config)
-        self.pipeline = pipeline
+        let camera = CameraManager(config: config, mapping: mapping)
+        self.camera = camera
 
         camera.$status
             .receive(on: DispatchQueue.main)
@@ -65,15 +61,24 @@ final class DetectionViewModel: ObservableObject {
             .receive(on: DispatchQueue.main)
             .assign(to: &$detections)
 
-        camera.onFrame = { @Sendable [weak self] buffer, orientation in
-            guard let snapshot = pipeline.process(pixelBuffer: buffer, orientation: orientation) else { return }
-            Task { @MainActor [weak self] in
-                self?.apply(snapshot)
-            }
-        }
+        camera.$counts
+            .receive(on: DispatchQueue.main)
+            .assign(to: &$liveCounts)
+
+        camera.$visibleFruit
+            .receive(on: DispatchQueue.main)
+            .assign(to: &$visibleFruit)
+
+        camera.$countedIDs
+            .receive(on: DispatchQueue.main)
+            .assign(to: &$countedIDs)
+
+        camera.$frameSize
+            .receive(on: DispatchQueue.main)
+            .assign(to: &$frameSize)
     }
 
-    var isDemo: Bool { detector.isDemo }
+    var isDemo: Bool { false }
 
     /// Counters for whatever is on screen.
     var displayedCounts: FruitCounts {
@@ -94,9 +99,6 @@ final class DetectionViewModel: ObservableObject {
         if CameraManager.isCameraAvailable {
             liveFeed = .camera
             camera.start()
-        } else if detector.isDemo {
-            liveFeed = .simulated
-            startSimulatedFeed()
         } else {
             liveFeed = .unavailable
         }
@@ -105,7 +107,6 @@ final class DetectionViewModel: ObservableObject {
     func onDisappear() {
         pause()
         camera.stop()
-        stopSimulatedFeed()
     }
 
     func sourceChanged() {
@@ -127,23 +128,22 @@ final class DetectionViewModel: ObservableObject {
     }
 
     func start() {
-        pipeline.isRunning = true
+        camera.startCounting()
         isRunning = true
     }
 
     func pause() {
-        pipeline.isRunning = false
+        camera.pauseCounting()
         isRunning = false
     }
 
     func reset() {
         switch source {
         case .live:
-            pipeline.reset()
+            camera.reset()
             liveCounts = FruitCounts()
             visibleFruit = []
             countedIDs = []
-            camera.detections = []
             detections = []
         case .photo:
             photo = nil
@@ -153,7 +153,7 @@ final class DetectionViewModel: ObservableObject {
 
     func update(config: CountingConfig) {
         self.config = config
-        pipeline.update(config: config)
+        camera.update(config: config)
     }
 
     /// Counts were saved to a session; start fresh.
@@ -174,12 +174,12 @@ final class DetectionViewModel: ObservableObject {
         isAnalyzingPhoto = true
         defer { isAnalyzingPhoto = false }
 
-        let detector = self.detector
+        let camera = self.camera
         let cgImage = input.image
         let orientation = input.orientation
         do {
             photoDetections = try await Task.detached(priority: .userInitiated) {
-                try detector.detect(image: cgImage, orientation: orientation)
+                try camera.detect(image: cgImage, orientation: orientation)
             }.value
         } catch {
             errorMessage = "Deteksi gagal: \(error.localizedDescription)"
@@ -210,47 +210,5 @@ final class DetectionViewModel: ObservableObject {
                 counted: countedIDs.contains(fruit.id)
             )
         }
-    }
-
-    // MARK: Private
-
-    private func apply(_ snapshot: DetectionPipeline.Snapshot) {
-        guard isRunning else { return }
-        visibleFruit = snapshot.visible
-        countedIDs = snapshot.countedIDs
-        liveCounts = snapshot.counts
-        if snapshot.frameSize != frameSize {
-            frameSize = snapshot.frameSize
-        }
-    }
-
-    /// Feeds a blank portrait frame ~15 times a second to the demo detector,
-    /// so live counting can be tried in the simulator.
-    private func startSimulatedFeed() {
-        guard simulatedTimer == nil, let blankBuffer = Self.makeBlankPixelBuffer(width: 72, height: 128) else { return }
-        let pipeline = self.pipeline
-        // The blank buffer is created once and only ever read on the timer queue.
-        nonisolated(unsafe) let buffer = blankBuffer
-        let timer = DispatchSource.makeTimerSource(queue: DispatchQueue(label: "UrbanHarvest.simulatedFeed"))
-        timer.schedule(deadline: .now(), repeating: .milliseconds(66))
-        timer.setEventHandler { @Sendable [weak self] in
-            guard let snapshot = pipeline.process(pixelBuffer: buffer, orientation: .up) else { return }
-            Task { @MainActor [weak self] in
-                self?.apply(snapshot)
-            }
-        }
-        timer.resume()
-        simulatedTimer = timer
-    }
-
-    private func stopSimulatedFeed() {
-        simulatedTimer?.cancel()
-        simulatedTimer = nil
-    }
-
-    private static func makeBlankPixelBuffer(width: Int, height: Int) -> CVPixelBuffer? {
-        var buffer: CVPixelBuffer?
-        let status = CVPixelBufferCreate(kCFAllocatorDefault, width, height, kCVPixelFormatType_32BGRA, nil, &buffer)
-        return status == kCVReturnSuccess ? buffer : nil
     }
 }

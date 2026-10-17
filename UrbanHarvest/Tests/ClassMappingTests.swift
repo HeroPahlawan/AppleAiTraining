@@ -11,12 +11,16 @@ final class ClassMappingTests: XCTestCase {
             return XCTFail("ClassMapping.json is not in the app bundle")
         }
         let mapping = ClassMapping.load()
-        XCTAssertEqual(mapping.detectorModelName, "FruitDetector")
+        XCTAssertEqual(mapping.detectorModelName, "FruitsQualityDetector TL 1500")
         XCTAssertEqual(mapping.advisorModelName, "YieldAdvisor")
         XCTAssertEqual(mapping.bucket(for: "fresh"), .good)
         XCTAssertEqual(mapping.bucket(for: "rotten"), .defect)
         XCTAssertEqual(mapping.bucket(for: "fresh_apple"), .good)
         XCTAssertEqual(mapping.bucket(for: "rotten_apple"), .defect)
+        XCTAssertEqual(mapping.bucket(for: "Apple_Good"), .good)
+        XCTAssertEqual(mapping.bucket(for: "Apple_Bad"), .defect)
+        XCTAssertEqual(mapping.bucket(for: "Lime_Bad"), .defect)
+        XCTAssertEqual(mapping.bucket(for: "Banana_Bad"), .defect)
     }
 
     func testExactLabelsAreCaseInsensitive() throws {
