@@ -21,7 +21,6 @@ struct RootView: View {
             SettingsView()
                 .tabItem { Label("Pengaturan", systemImage: "gearshape") }
         }
-        .tint(.green)
         .onAppear(perform: applySpeechSettings)
         .onChange(of: settings.speechLanguage) { applySpeechSettings() }
         .onChange(of: settings.speechRate) { applySpeechSettings() }

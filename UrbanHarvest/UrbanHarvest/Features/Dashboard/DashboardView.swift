@@ -42,8 +42,8 @@ struct DashboardView: View {
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
                     StatTile(title: "Total buah", value: "\(stats.total)")
                     StatTile(title: "Sesi", value: "\(stats.sessionCount)")
-                    StatTile(title: "Baik", value: SpokenText.displayPercent(stats.goodPercent), color: .green)
-                    StatTile(title: "Cacat", value: SpokenText.displayPercent(stats.defectPercent), color: .red)
+                    StatTile(title: "Baik", value: SpokenText.displayPercent(stats.goodPercent), color: .good)
+                    StatTile(title: "Cacat", value: SpokenText.displayPercent(stats.defectPercent), color: .defect)
                 }
                 .padding(.vertical, 4)
 
@@ -78,8 +78,8 @@ struct DashboardView: View {
                         .foregroundStyle(by: .value("Kategori", point.bucket.displayName))
                     }
                     .chartForegroundStyleScale([
-                        FruitBucket.good.displayName: Color.green,
-                        FruitBucket.defect.displayName: Color.red,
+                        FruitBucket.good.displayName: Color.good,
+                        FruitBucket.defect.displayName: Color.defect,
                     ])
                     .frame(height: 220)
                     .padding(.vertical, 4)
@@ -120,8 +120,8 @@ private struct SessionRow: View {
                     .foregroundStyle(.secondary)
             }
             HStack(spacing: 12) {
-                Label("\(session.goodCount)", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
-                Label("\(session.defectCount)", systemImage: "xmark.octagon.fill").foregroundStyle(.red)
+                Label("\(session.goodCount)", systemImage: "checkmark.circle.fill").foregroundStyle(.good)
+                Label("\(session.defectCount)", systemImage: "xmark.octagon.fill").foregroundStyle(.defect)
                 Text("Cacat \(SpokenText.displayPercent(session.defectPercent))")
                     .foregroundStyle(.secondary)
                 Spacer()

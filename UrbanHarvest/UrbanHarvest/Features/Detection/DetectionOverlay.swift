@@ -75,7 +75,7 @@ struct DetectionOverlay: View {
 
                 ForEach(boxes) { box in
                     let rect = mapper.rect(for: box.rect)
-                    let color: Color = box.bucket == .good ? .green : .red
+                    let color: Color = box.bucket == .good ? .good : .defect
 
                     Rectangle()
                         .stroke(color, lineWidth: box.counted ? 4 : 2)

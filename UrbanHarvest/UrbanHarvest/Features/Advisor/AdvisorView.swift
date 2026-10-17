@@ -105,7 +105,7 @@ struct AdvisorView: View {
                 }
                 Text(SpokenText.displayValue(result.baseline, target: result.target))
                     .font(.system(size: 40, weight: .bold, design: .rounded))
-                    .foregroundStyle(result.target == .defectRate ? Color.red : Color.green)
+                    .foregroundStyle(result.target == .defectRate ? Color.defect : Color.good)
                 ListenButton(
                     id: "analysis-summary",
                     text: SpokenText.analysisSpoken(result, advisories: model.advisories, language: settings.speechLanguage)
@@ -181,7 +181,7 @@ private struct SuggestionCard: View {
                 Text("\(rank)")
                     .font(.caption.weight(.bold))
                     .frame(width: 22, height: 22)
-                    .background(Color.green.opacity(0.2), in: Circle())
+                    .background(Color.accentColor.opacity(0.2), in: Circle())
                 Text(SpokenText.title(for: suggestion.change))
                     .font(.headline)
                 Spacer()
@@ -196,7 +196,7 @@ private struct SuggestionCard: View {
                     .foregroundStyle(.secondary)
                 Text(SpokenText.displayValue(suggestion.predicted, target: suggestion.target))
                     .fontWeight(.semibold)
-                    .foregroundStyle(.green)
+                    .foregroundStyle(.good)
             }
             .font(.subheadline.monospacedDigit())
             ListenButton(

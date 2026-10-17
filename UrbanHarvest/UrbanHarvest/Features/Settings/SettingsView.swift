@@ -153,7 +153,7 @@ private struct ModelStatusRow: View {
                 Spacer()
                 if status.isLoaded {
                     Label("Aktif", systemImage: "checkmark.circle.fill")
-                        .foregroundStyle(.green)
+                        .foregroundStyle(.good)
                 } else {
                     DemoBadge()
                 }

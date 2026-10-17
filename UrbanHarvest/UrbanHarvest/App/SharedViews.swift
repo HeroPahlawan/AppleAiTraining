@@ -7,8 +7,8 @@ struct DemoBadge: View {
             .font(.caption.weight(.semibold))
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
-            .background(Color.orange.opacity(0.2), in: Capsule())
-            .foregroundStyle(Color.orange)
+            .background(Color.demo.opacity(0.2), in: Capsule())
+            .foregroundStyle(Color.demo)
             .accessibilityLabel("Mode demo: model belum dipasang, hasil adalah contoh")
     }
 }
@@ -89,8 +89,8 @@ struct StatTile: View {
         EstimateTag()
         ListenButton(id: "preview", text: "Contoh teks untuk didengarkan")
         HStack(spacing: 8) {
-            StatTile(title: "Baik", value: "128", color: .green)
-            StatTile(title: "Cacat", value: "14", color: .red)
+            StatTile(title: "Baik", value: "128", color: .good)
+            StatTile(title: "Cacat", value: "14", color: .defect)
             StatTile(title: "Total", value: "142")
         }
     }

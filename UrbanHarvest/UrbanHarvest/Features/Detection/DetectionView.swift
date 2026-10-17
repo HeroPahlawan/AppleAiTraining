@@ -187,7 +187,7 @@ struct DetectionView: View {
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
-                .tint(model.isRunning ? .orange : .green)
+                .tint(model.isRunning ? .orange : .accentColor)
                 .disabled(model.liveFeed == .unavailable)
             } else {
                 PhotosPicker(selection: $pickerItem, matching: .images) {
@@ -241,10 +241,10 @@ struct CountersBar: View {
     var body: some View {
         VStack(spacing: 8) {
             HStack(spacing: 8) {
-                StatTile(title: "Baik", value: "\(counts.good)", color: .green)
-                StatTile(title: "Cacat", value: "\(counts.defect)", color: .red)
+                StatTile(title: "Baik", value: "\(counts.good)", color: .good)
+                StatTile(title: "Cacat", value: "\(counts.defect)", color: .defect)
                 StatTile(title: "Total", value: "\(counts.total)")
-                StatTile(title: "Cacat %", value: SpokenText.displayPercent(counts.defectPercent), color: .red)
+                StatTile(title: "Cacat %", value: SpokenText.displayPercent(counts.defectPercent), color: .defect)
             }
             HStack {
                 Spacer()
