@@ -29,7 +29,6 @@ targets:
         CFBundleDevelopmentRegion: id
         CFBundleLocalizations: [id, en]
         LSRequiresIPhoneOS: true
-        UILaunchScreen: {}
         UIApplicationSupportsIndirectInputEvents: true
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         NSCameraUsageDescription: "UrbanHarvest memakai kamera untuk mendeteksi dan menghitung buah yang baik dan yang cacat saat panen."

@@ -4,6 +4,8 @@ import SwiftUI
 /// Asks for the session details and saves a `HarvestSession`.
 struct SaveSessionSheet: View {
     let counts: FruitCounts
+    /// Fruit detected by the model, pre-selected in the picker when the schema has it.
+    var suggestedFruit: FruitType? = nil
     var onSaved: () -> Void = {}
 
     @Environment(\.modelContext) private var modelContext
@@ -48,6 +50,9 @@ struct SaveSessionSheet: View {
                     TextField("Catatan (opsional)", text: $notes, axis: .vertical)
                         .lineLimit(2...4)
                 }
+            }
+            .onAppear {
+                if let suggestedFruit { fruitType = suggestedFruit }
             }
             .navigationTitle("Simpan Sesi")
             .navigationBarTitleDisplayMode(.inline)

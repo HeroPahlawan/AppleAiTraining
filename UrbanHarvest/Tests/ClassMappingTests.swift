@@ -11,12 +11,28 @@ final class ClassMappingTests: XCTestCase {
             return XCTFail("ClassMapping.json is not in the app bundle")
         }
         let mapping = ClassMapping.load()
-        XCTAssertEqual(mapping.detectorModelName, "FruitDetector")
+        XCTAssertEqual(mapping.detectorModelName, "FruitsQualityDetector TL 1500")
         XCTAssertEqual(mapping.advisorModelName, "YieldAdvisor")
         XCTAssertEqual(mapping.bucket(for: "fresh"), .good)
         XCTAssertEqual(mapping.bucket(for: "rotten"), .defect)
         XCTAssertEqual(mapping.bucket(for: "fresh_apple"), .good)
         XCTAssertEqual(mapping.bucket(for: "rotten_apple"), .defect)
+    }
+
+    func testBundledFileMapsQualityDetectorLabels() {
+        let mapping = ClassMapping.load()
+        for fruit in ["Apple", "Banana", "Guava", "Lime", "Orange", "Pomegranate"] {
+            XCTAssertEqual(mapping.bucket(for: "\(fruit)_Good"), .good, fruit)
+            XCTAssertEqual(mapping.bucket(for: "\(fruit)_Bad"), .defect, fruit)
+            // The overlay label and the result card must name the fruit the same way.
+            XCTAssertEqual(mapping.displayName(for: "\(fruit)_Bad"), FruitKind(label: "\(fruit)_Bad").displayName)
+        }
+    }
+
+    func testFruitKindParsesModelLabels() {
+        XCTAssertEqual(FruitKind(label: "Lime_Bad"), .lime)
+        XCTAssertEqual(FruitKind(label: "pomegranate_good"), .pomegranate)
+        XCTAssertEqual(FruitKind(label: "fresh"), .unknown)
     }
 
     func testExactLabelsAreCaseInsensitive() throws {

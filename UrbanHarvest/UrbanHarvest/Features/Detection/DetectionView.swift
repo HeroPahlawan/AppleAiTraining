@@ -1,12 +1,21 @@
 import PhotosUI
+import SwiftData
 import SwiftUI
 
+/// Deteksi tab in the FruitGrade style: a home screen with Live, Photo and
+/// Sample entry points, plus the latest saved sessions.
 struct DetectionView: View {
     @EnvironmentObject private var settings: AppSettings
     @StateObject private var model: DetectionViewModel
+    @Query(sort: \HarvestSession.date, order: .reverse) private var sessions: [HarvestSession]
 
+    @State private var showCamera = false
+    @State private var showPicker = false
     @State private var pickerItem: PhotosPickerItem?
-    @State private var showingSaveSheet = false
+    @State private var showResult = false
+    /// Set by "Ulangi" so the picker opens only after the result cover has dismissed.
+    @State private var reopenPickerAfterResult = false
+    @State private var showNoFruitAlert = false
 
     init(detector: FruitDetecting, config: CountingConfig) {
         _model = StateObject(wrappedValue: DetectionViewModel(detector: detector, config: config))
@@ -14,222 +23,176 @@ struct DetectionView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                Picker("Sumber", selection: $model.source) {
-                    ForEach(DetectionViewModel.Source.allCases) { Text($0.displayName).tag($0) }
-                }
-                .pickerStyle(.segmented)
-                .padding(.horizontal)
-                .padding(.bottom, 8)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    header
 
-                ZStack {
-                    Color.black
-                    switch model.source {
-                    case .live: liveView
-                    case .photo: photoView
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Deteksi Buah")
+                            .font(.title2.weight(.bold))
+                        Text("Hitung buah baik dan cacat dengan kamera atau foto.")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
                     }
-                }
-                .clipped()
 
-                CountersBar(counts: model.displayedCounts, language: settings.speechLanguage)
-                    .padding(.horizontal)
-                    .padding(.top, 10)
+                    VStack(spacing: 12) {
+                        FruitGradeModeCard(
+                            icon: "camera.fill",
+                            tint: .good,
+                            title: "Kamera Langsung",
+                            subtitle: "Hitung buah secara langsung saat melewati kamera."
+                        ) {
+                            showCamera = true
+                        }
+                        FruitGradeModeCard(
+                            icon: "photo.fill",
+                            tint: .blue,
+                            title: "Foto",
+                            subtitle: "Deteksi buah dari foto di galeri."
+                        ) {
+                            showPicker = true
+                        }
+                        FruitGradeModeCard(
+                            icon: "leaf.fill",
+                            tint: .teal,
+                            title: "Gambar Contoh",
+                            subtitle: "Coba deteksi tanpa kamera dengan gambar bawaan."
+                        ) {
+                            Task { await analyze(SampleImage.load()) }
+                        }
+                    }
 
-                controls
-                    .padding()
-            }
-            .navigationTitle("Deteksi Buah")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                if model.isDemo {
-                    ToolbarItem(placement: .topBarTrailing) { DemoBadge() }
+                    Text("Sesi Terbaru")
+                        .font(.headline)
+
+                    recentSessions
                 }
+                .padding()
             }
-            .sheet(isPresented: $showingSaveSheet) {
-                SaveSessionSheet(counts: model.displayedCounts) {
-                    model.didSaveSession()
+            .toolbar(.hidden, for: .navigationBar)
+            .overlay {
+                if model.isAnalyzingPhoto {
+                    ProgressView("Mendeteksi…")
+                        .padding()
+                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
                 }
-            }
-            .alert(
-                "Terjadi kesalahan",
-                isPresented: Binding(get: { model.errorMessage != nil }, set: { if !$0 { model.errorMessage = nil } })
-            ) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text(model.errorMessage ?? "")
             }
         }
-        .onAppear { model.onAppear() }
-        .onDisappear { model.onDisappear() }
-        .onChange(of: model.source) { model.sourceChanged() }
-        .onChange(of: settings.counting) { _, newValue in model.update(config: newValue) }
+        .photosPicker(isPresented: $showPicker, selection: $pickerItem, matching: .images)
         .onChange(of: pickerItem) { _, item in
             guard let item else { return }
+            pickerItem = nil
             Task {
                 if let data = try? await item.loadTransferable(type: Data.self), let image = UIImage(data: data) {
-                    await model.analyze(photo: image)
+                    await analyze(image)
                 } else {
                     model.errorMessage = "Foto tidak dapat dimuat."
                 }
-                pickerItem = nil
             }
         }
-    }
-
-    // MARK: Live
-
-    @ViewBuilder
-    private var liveView: some View {
-        switch model.liveFeed {
-        case .camera:
-            switch model.cameraStatus {
-            case .denied:
-                messageView(
-                    icon: "video.slash",
-                    text: "Akses kamera ditolak. Izinkan di Pengaturan iOS, atau gunakan Foto uji."
-                )
-            case .unavailable:
-                messageView(icon: "video.slash", text: "Kamera tidak dapat dibuka. Gunakan Foto uji.")
-            case .idle, .running:
-                CameraPreview(session: model.camera.session)
-                    .overlay { liveOverlay }
+        .onChange(of: settings.counting) { _, newValue in model.update(config: newValue) }
+        .fullScreenCover(isPresented: $showCamera) {
+            LiveCountingView(model: model)
+        }
+        .fullScreenCover(isPresented: $showResult, onDismiss: {
+            model.reset()
+            if reopenPickerAfterResult {
+                reopenPickerAfterResult = false
+                showPicker = true
             }
-        case .simulated:
-            ZStack(alignment: .bottomLeading) {
-                LinearGradient(colors: [Color(white: 0.25), Color(white: 0.12)], startPoint: .top, endPoint: .bottom)
-                liveOverlay
-                Text("Umpan simulasi — tidak ada kamera")
-                    .font(.caption)
-                    .foregroundStyle(.white.opacity(0.8))
-                    .padding(8)
-            }
-        case .unavailable:
-            messageView(
-                icon: "video.slash",
-                text: "Kamera tidak tersedia di perangkat ini. Gunakan Foto uji untuk mencoba deteksi."
+        }) {
+            PhotoResultView(
+                model: model,
+                onRetake: {
+                    reopenPickerAfterResult = true
+                    showResult = false
+                },
+                onClose: { showResult = false }
             )
         }
-    }
-
-    private var liveOverlay: some View {
-        DetectionOverlay(
-            boxes: model.overlayBoxesForLive(),
-            imageSize: model.frameSize,
-            mode: .fill,
-            linePosition: settings.counting.method == .lineCrossing ? settings.counting.linePosition : nil
-        )
-        .overlay(alignment: .topLeading) {
-            if !model.isRunning {
-                Label("Dijeda", systemImage: "pause.circle.fill")
-                    .font(.caption.weight(.semibold))
-                    .padding(6)
-                    .background(.ultraThinMaterial, in: Capsule())
-                    .padding(8)
-            }
+        .alert("Tidak ada buah terdeteksi", isPresented: $showNoFruitAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Model tidak menemukan buah pada gambar ini. Coba foto lain dengan buah di atas permukaan polos.")
+        }
+        .alert(
+            "Terjadi kesalahan",
+            isPresented: Binding(get: { model.errorMessage != nil }, set: { if !$0 { model.errorMessage = nil } })
+        ) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(model.errorMessage ?? "")
         }
     }
 
-    // MARK: Photo
+    private var header: some View {
+        HStack {
+            Label("UrbanHarvest", systemImage: "leaf.fill")
+                .font(.title3.weight(.bold))
+                .foregroundStyle(Color.good)
+            if model.isDemo {
+                DemoBadge()
+            }
+            Spacer()
+        }
+    }
 
     @ViewBuilder
-    private var photoView: some View {
-        if let photo = model.photo {
-            Image(uiImage: photo)
-                .resizable()
-                .scaledToFit()
-                .overlay {
-                    DetectionOverlay(boxes: model.overlayBoxesForPhoto(), imageSize: photo.size, mode: .fit)
-                }
-                .overlay {
-                    if model.isAnalyzingPhoto {
-                        ProgressView("Mendeteksi…")
-                            .padding()
-                            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+    private var recentSessions: some View {
+        if sessions.isEmpty {
+            Text("Belum ada sesi. Gunakan Kamera Langsung atau Foto, lalu ketuk Simpan Sesi.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding()
+                .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 12))
+        } else {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(alignment: .top, spacing: 12) {
+                    ForEach(sessions.prefix(4)) { session in
+                        RecentSessionCard(session: session)
                     }
                 }
+            }
+        }
+    }
+
+    private func analyze(_ image: UIImage) async {
+        model.source = .photo
+        await model.analyze(photo: image)
+        guard model.errorMessage == nil else { return }
+        if model.photoDetections.isEmpty {
+            model.reset()
+            showNoFruitAlert = true
         } else {
-            VStack(spacing: 16) {
-                Image(systemName: "photo.on.rectangle.angled")
-                    .font(.system(size: 44))
-                    .foregroundStyle(.white.opacity(0.7))
-                Text("Uji deteksi dengan foto buah di atas permukaan polos.")
-                    .multilineTextAlignment(.center)
-                    .foregroundStyle(.white.opacity(0.85))
-                    .padding(.horizontal)
-                photoButtons
-            }
+            showResult = true
         }
     }
+}
 
-    private var photoButtons: some View {
-        HStack {
-            PhotosPicker(selection: $pickerItem, matching: .images) {
-                Label("Pilih Foto", systemImage: "photo")
+/// Small card for one saved session in the "Sesi Terbaru" row.
+private struct RecentSessionCard: View {
+    let session: HarvestSession
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(session.fruitDisplayName)
+                .font(.subheadline.weight(.semibold))
+            Text(session.date.formatted(.relative(presentation: .named)))
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+            HStack(spacing: 8) {
+                Label("\(session.goodCount)", systemImage: "checkmark.circle.fill")
+                    .foregroundStyle(.good)
+                Label("\(session.defectCount)", systemImage: "xmark.octagon.fill")
+                    .foregroundStyle(.defect)
             }
-            Button {
-                Task { await model.analyze(photo: SampleImage.load()) }
-            } label: {
-                Label("Gambar Contoh", systemImage: "leaf")
-            }
+            .font(.caption.monospacedDigit())
         }
-        .buttonStyle(.borderedProminent)
-    }
-
-    // MARK: Controls
-
-    private var controls: some View {
-        HStack(spacing: 12) {
-            if model.source == .live {
-                Button {
-                    model.toggleRunning()
-                } label: {
-                    Label(model.isRunning ? "Jeda" : "Mulai", systemImage: model.isRunning ? "pause.fill" : "play.fill")
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(model.isRunning ? .orange : .accentColor)
-                .disabled(model.liveFeed == .unavailable)
-            } else {
-                PhotosPicker(selection: $pickerItem, matching: .images) {
-                    Label("Foto Lain", systemImage: "photo")
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.bordered)
-            }
-
-            Button(role: .destructive) {
-                model.reset()
-            } label: {
-                Label("Reset", systemImage: "arrow.counterclockwise")
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(.bordered)
-
-            Button {
-                model.pause()
-                showingSaveSheet = true
-            } label: {
-                Label("Simpan", systemImage: "square.and.arrow.down")
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(.bordered)
-            .disabled(model.displayedCounts.total == 0)
-        }
-        .labelStyle(.titleAndIcon)
-        .controlSize(.large)
-    }
-
-    private func messageView(icon: String, text: String) -> some View {
-        VStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.system(size: 40))
-            Text(text)
-                .multilineTextAlignment(.center)
-            Button("Gunakan Foto uji") { model.source = .photo }
-                .buttonStyle(.borderedProminent)
-        }
-        .foregroundStyle(.white)
-        .padding()
+        .frame(width: 120, alignment: .leading)
+        .padding(12)
+        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 12))
+        .accessibilityElement(children: .combine)
     }
 }
 

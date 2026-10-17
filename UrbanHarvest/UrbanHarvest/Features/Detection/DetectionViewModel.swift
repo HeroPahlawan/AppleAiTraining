@@ -82,6 +82,12 @@ final class DetectionViewModel: ObservableObject {
         }
     }
 
+    /// Most common fruit among the tracked boxes, used to pre-fill the save sheet.
+    var dominantLiveFruit: FruitKind { Self.dominantFruit(in: visibleFruit.map(\.label)) }
+
+    /// Most common fruit in the analyzed photo.
+    var dominantPhotoFruit: FruitKind { Self.dominantFruit(in: photoDetections.map(\.label)) }
+
     // MARK: Lifecycle
 
     func onAppear() {
@@ -239,6 +245,12 @@ final class DetectionViewModel: ObservableObject {
     private func stopSimulatedFeed() {
         simulatedTimer?.cancel()
         simulatedTimer = nil
+    }
+
+    private static func dominantFruit(in labels: [String]) -> FruitKind {
+        let kinds = labels.map(FruitKind.init(label:)).filter { $0 != .unknown }
+        let tally = Dictionary(kinds.map { ($0, 1) }, uniquingKeysWith: +)
+        return tally.max(by: { $0.value < $1.value })?.key ?? .unknown
     }
 
     private static func makeBlankPixelBuffer(width: Int, height: Int) -> CVPixelBuffer? {
