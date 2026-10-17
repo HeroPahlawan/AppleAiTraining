@@ -47,6 +47,9 @@ struct FruitGradeProgressRing: View {
             Text(label)
                 .font(.headline.weight(.bold).monospacedDigit())
                 .foregroundStyle(color)
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+                .padding(lineWidth + 2)
         }
     }
 }

@@ -27,15 +27,22 @@ struct PhotoResultView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            topBar
+            // Takes whatever height the card leaves, so it adapts to every iPhone size.
             photo
-                .frame(height: 360)
-                .overlay(alignment: .top) { topBar }
-
-            ScrollView {
-                resultCard
-            }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+            resultCard
+                .background {
+                    UnevenRoundedRectangle(topLeadingRadius: 28, topTrailingRadius: 28)
+                        .fill(Color(.systemBackground))
+                        .shadow(color: .black.opacity(0.08), radius: 12, y: -4)
+                        .ignoresSafeArea(edges: .bottom)
+                }
         }
-        .ignoresSafeArea(edges: .top)
+        // Opaque, so the presenting screen never shows through the full-screen cover.
+        .background(Color(.secondarySystemBackground).ignoresSafeArea())
         .sheet(isPresented: $showingSaveSheet, onDismiss: {
             if didSave { onClose() }
         }) {
@@ -45,27 +52,43 @@ struct PhotoResultView: View {
         }
     }
 
+    @ViewBuilder
     private var photo: some View {
-        FruitGradePhotoBackground(image: model.photo, emoji: fruit.emoji, contentMode: .fit)
-            .overlay {
-                if let image = model.photo {
+        if let image = model.photo {
+            Color.clear
+                .overlay {
+                    Image(uiImage: image)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                }
+                .overlay {
                     DetectionOverlay(boxes: model.overlayBoxesForPhoto(), imageSize: image.size, mode: .fit)
                 }
-            }
+                .overlay(alignment: .topLeading) {
+                    if model.isDemo {
+                        DemoBadge().padding(8)
+                    }
+                }
+        } else {
+            FruitGradePhotoBackground(emoji: fruit.emoji)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+        }
     }
 
     private var topBar: some View {
         HStack {
             Button(action: onClose) {
                 Image(systemName: "chevron.left")
-                    .foregroundStyle(.white)
-                    .padding(10)
-                    .background(.black.opacity(0.35), in: Circle())
+                    .font(.headline)
+                    .foregroundStyle(Color.primary)
+                    .frame(width: 40, height: 40)
+                    .background(.regularMaterial, in: Circle())
             }
             .accessibilityLabel("Kembali")
-            if model.isDemo {
-                DemoBadge()
-            }
+            Spacer()
+            Text("Hasil Deteksi")
+                .font(.headline)
             Spacer()
             if let image = model.photo {
                 ShareLink(
@@ -73,15 +96,19 @@ struct PhotoResultView: View {
                     preview: SharePreview(fruit.displayName, image: Image(uiImage: image))
                 ) {
                     Image(systemName: "square.and.arrow.up")
-                        .foregroundStyle(.white)
-                        .padding(10)
-                        .background(.black.opacity(0.35), in: Circle())
+                        .font(.headline)
+                        .foregroundStyle(Color.primary)
+                        .frame(width: 40, height: 40)
+                        .background(.regularMaterial, in: Circle())
                 }
                 .accessibilityLabel("Bagikan")
+            } else {
+                // Keeps the title centered when there is nothing to share.
+                Color.clear.frame(width: 40, height: 40)
             }
         }
         .padding(.horizontal, 16)
-        .padding(.top, 60)
+        .padding(.top, 8)
     }
 
     private var resultCard: some View {
@@ -140,7 +167,9 @@ struct PhotoResultView: View {
             Button("Ulangi", action: onRetake)
                 .font(.subheadline.weight(.medium))
         }
-        .padding(20)
+        .padding(.horizontal, 20)
+        .padding(.top, 24)
+        .padding(.bottom, 8)
     }
 
     private func resultStat(title: String, value: String, dot: Color? = nil) -> some View {
