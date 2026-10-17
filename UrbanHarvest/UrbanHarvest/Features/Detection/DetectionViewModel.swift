@@ -29,6 +29,7 @@ final class DetectionViewModel: ObservableObject {
     @Published private(set) var isRunning = false
     @Published private(set) var liveFeed: LiveFeed = .unavailable
     @Published private(set) var cameraStatus: CameraManager.Status = .idle
+    @Published private(set) var detections: [Detection] = []
 
     // Live
     @Published private(set) var liveCounts = FruitCounts()
@@ -59,6 +60,10 @@ final class DetectionViewModel: ObservableObject {
         camera.$status
             .receive(on: DispatchQueue.main)
             .assign(to: &$cameraStatus)
+
+        camera.$detections
+            .receive(on: DispatchQueue.main)
+            .assign(to: &$detections)
 
         camera.onFrame = { @Sendable [weak self] buffer, orientation in
             guard let snapshot = pipeline.process(pixelBuffer: buffer, orientation: orientation) else { return }
@@ -138,6 +143,8 @@ final class DetectionViewModel: ObservableObject {
             liveCounts = FruitCounts()
             visibleFruit = []
             countedIDs = []
+            camera.detections = []
+            detections = []
         case .photo:
             photo = nil
             photoDetections = []

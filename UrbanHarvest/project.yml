@@ -7,6 +7,11 @@ options:
   createIntermediateGroups: true
   developmentLanguage: id
 
+packages:
+  SimulatorCamera:
+    url: https://github.com/Akylas/SimulatorCamera
+    branch: main
+
 settings:
   base:
     SWIFT_VERSION: "5.0"            # Swift 5 language mode (requires a Swift 5.9+ toolchain / Xcode 15+)
@@ -22,6 +27,8 @@ targets:
       # Everything under UrbanHarvest/ is part of the app target, including
       # Models/*.mlmodel. Re-run `xcodegen generate` after dropping in models.
       - path: UrbanHarvest
+    dependencies:
+      - package: SimulatorCameraClient
     info:
       path: UrbanHarvest/App/Info.plist
       properties:

@@ -4,7 +4,6 @@ import SwiftUI
 struct DetectionView: View {
     @EnvironmentObject private var settings: AppSettings
     @StateObject private var model: DetectionViewModel
-
     @State private var pickerItem: PhotosPickerItem?
     @State private var showingSaveSheet = false
 
@@ -91,42 +90,43 @@ struct DetectionView: View {
             case .unavailable:
                 messageView(icon: "video.slash", text: "Kamera tidak dapat dibuka. Gunakan Foto uji.")
             case .idle, .running:
-                CameraPreview(session: model.camera.session)
-                    .overlay { liveOverlay }
+                GeometryReader { geo in
+                    ZStack {
+                        CameraPreviewView(previewLayer: model.camera.previewLayer)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        boundingBoxOverlay(in: geo.size)
+                    }
+                }
             }
         case .simulated:
-            ZStack(alignment: .bottomLeading) {
-                LinearGradient(colors: [Color(white: 0.25), Color(white: 0.12)], startPoint: .top, endPoint: .bottom)
-                liveOverlay
-                Text("Umpan simulasi — tidak ada kamera")
-                    .font(.caption)
-                    .foregroundStyle(.white.opacity(0.8))
-                    .padding(8)
-            }
+            messageView(
+                icon: "video.slash",
+                text: "Kamera tidak tersedia di perangkat ini. Gunakan Foto uji untuk mencoba deteksi."
+            )
         case .unavailable:
             messageView(
                 icon: "video.slash",
                 text: "Kamera tidak tersedia di perangkat ini. Gunakan Foto uji untuk mencoba deteksi."
             )
         }
-    }
 
-    private var liveOverlay: some View {
-        DetectionOverlay(
-            boxes: model.overlayBoxesForLive(),
-            imageSize: model.frameSize,
-            mode: .fill,
-            linePosition: settings.counting.method == .lineCrossing ? settings.counting.linePosition : nil
-        )
-        .overlay(alignment: .topLeading) {
-            if !model.isRunning {
-                Label("Dijeda", systemImage: "pause.circle.fill")
-                    .font(.caption.weight(.semibold))
-                    .padding(6)
-                    .background(.ultraThinMaterial, in: Capsule())
-                    .padding(8)
-            }
-        }
+//        private var liveOverlay: some View {
+//            DetectionOverlay(
+//                boxes: model.overlayBoxesForLive(),
+//                imageSize: model.frameSize,
+//                mode: .fill,
+//                linePosition: settings.counting.method == .lineCrossing ? settings.counting.linePosition : nil
+//            )
+//            .overlay(alignment: .topLeading) {
+//                if !model.isRunning {
+//                    Label("Dijeda", systemImage: "pause.circle.fill")
+//                        .font(.caption.weight(.semibold))
+//                        .padding(6)
+//                        .background(.ultraThinMaterial, in: Capsule())
+//                        .padding(8)
+//                }
+//            }
+//        }
     }
 
     // MARK: Photo
@@ -230,6 +230,12 @@ struct DetectionView: View {
         }
         .foregroundStyle(.white)
         .padding()
+    }
+
+    private func boundingBoxOverlay(in size: CGSize) -> some View {
+        ForEach(model.detections) { detection in
+            BoundingBoxView(detection: detection, canvasSize: size)
+        }
     }
 }
 
